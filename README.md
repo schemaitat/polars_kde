@@ -1,6 +1,6 @@
 # Polars KDE
 
-Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by the [Polars](https://www.pola.rs/) DataFrame library.
+Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by the [Polars](https://www.pola.rs/) DataFrame library. Under the hood it uses the [kernel_density_estimation](https://docs.rs/kernel-density-estimation/latest/kernel_density_estimation/kde/index.html) crate.
 
 ## Table of Contents
 
@@ -139,3 +139,10 @@ NOTE: The `benchmark.py` file is actually a [marimo](https://marimo.app) noteboo
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by the [Polars](https://www.pola.rs/) DataFrame library.
+
+
+## Limitations and further improvements
+
+- The current implementation only supports float32 dtypes and uses the Gaussian kernel with Silverman bandwith estimation. Should be extended to support various kernels, bandwiths and dtypes.
+- The current implementation only supports 1D KDE's. Should be extended to support 2D KDE's.
+- The underlying rust implementation is not yet optimized for performance, especially for large datasets.

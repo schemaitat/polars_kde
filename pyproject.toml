@@ -91,8 +91,9 @@ docstring-code-line-length = "dynamic"
 
 [tool.uv]
 dev-dependencies = [
+    "maturin>=1.8.2",
     "pip>=24.2",
-    "polars>=1.8.2",
+    "polars>=1.24.0",
     "pre-commit>=4.0.1",
     "pytest>=8.3.3",
 ]
