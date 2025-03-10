@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from polars_kde.typing import IntoExprColumn
 
 
-def kde(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
+def kde_static_evals(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
     return register_plugin_function(
         args=[expr],
         plugin_path=LIB,
@@ -34,7 +34,7 @@ def kde_agg(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
     )
 
 
-def kde_series(expr: IntoExprColumn, eval_points: IntoExprColumn) -> pl.Expr:
+def kde_dynamic_evals(expr: IntoExprColumn, eval_points: IntoExprColumn) -> pl.Expr:
     """
     Works on two columns each of which is of type
     List[float] and returns a Series of type List[float].
@@ -48,4 +48,4 @@ def kde_series(expr: IntoExprColumn, eval_points: IntoExprColumn) -> pl.Expr:
     )
 
 
-__all__ = ["__version__", "kde", "kde_series"]
+__all__ = ["__version__", "kde_static_evals", "kde_dynamic_evals"]

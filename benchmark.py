@@ -1,7 +1,9 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "kaleido==0.2.1",
 #     "marimo",
+#     "nbformat==5.10.4",
 #     "numpy==2.2.3",
 #     "plotly==6.0.0",
 #     "polars==1.24.0",
@@ -12,7 +14,7 @@
 import marimo
 
 __generated_with = "0.11.17"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
 @app.cell
@@ -26,7 +28,7 @@ def _():
     import polars_kde as pkde
     import numpy as np
     import time
-
+    import kaleido
 
     def benchmark(f, *args, **kwargs):
         ts = time.time()
@@ -46,26 +48,29 @@ def _():
             }
         )
 
-
     def get_df(
         n_points: int = 1000,
         n_groups: int = 10,
-    ) -> pl.DataFrame:
-        return pl.DataFrame(
-            {"a": np.random.normal(0, 1, size=n_points)},
-            schema=pl.Schema({"a": pl.Float32}),
-        ).with_columns(
-            group=pl.cum_count("a").qcut(n_groups),
+    ) -> pl.LazyFrame:
+        return (
+            pl.LazyFrame(
+                {"a": np.random.normal(0, 1, size=n_points)},
+                schema=pl.Schema({"a": pl.Float32}),
+            )
+            .with_columns(
+                group=pl.cum_count("a").qcut(n_groups),
+            )
+            .lazy()
         )
-
 
     def kde_plugin(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return (
             df.group_by("group")
             .agg(pl.col("a").cast(pl.Float32))
-            .with_columns(kde=pkde.kde(pl.col("a"), eval_points=eval_points))
+            .with_columns(
+                kde=pkde.kde_static_evals(pl.col("a"), eval_points=eval_points)
+            )
         )
-
 
     def kde_scipy(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         def get_kde(arr: np.array) -> np.array:
@@ -90,15 +95,16 @@ def _():
             )
         )
 
-
     def kde_agg(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return df.group_by("group").agg(
             kde=pkde.kde_agg(pl.col("a"), eval_points=eval_points)
         )
+
     return (
         benchmark,
         gaussian_kde,
         get_df,
+        kaleido,
         kde_agg,
         kde_plugin,
         kde_scipy,
@@ -123,15 +129,16 @@ def _(benchmark, get_df, kde_agg, kde_plugin, kde_scipy, np, pl, product):
     functions = [kde_scipy, kde_agg, kde_plugin]
     test_frames = [
         get_df(i, j)
-        for i in [10_000, 100_000, 500_000, 1_000_000]
+        for i in [10_000, 100_000, 500_000, 1_000_000, 5_000_000]
         for j in [1, 10, 100, 1000]
     ]
 
-    results: list[pl.DataFrame] = []
+    results: list[pl.LazyFrame] = []
 
     for f, df in product(functions, test_frames):
-        print("Starting benchmark for", f.__name__, "with", df.height, "rows.")
-        results.append(benchmark(f, df=df, eval_points=eval_points))
+        df_c = df.collect()
+        print("Starting benchmark for", f.__name__, "with", df_c.height, "rows.")
+        results.append(benchmark(f, df=df_c, eval_points=eval_points))
 
     df_bench = pl.concat(results)
     return df, df_bench, eval_points, f, functions, results, test_frames
@@ -146,16 +153,20 @@ def _(df_bench, px):
         color="name",
         points="all",
     )
-
+    fig.update_layout(
+        title="KDE Benchmark<br>The points represent different number of groups.",
+        xaxis_title="Number of Rows",
+        yaxis_title="Total Time (s)",
+    )
     fig.update_xaxes(type="category")
-    fig.show()
+    fig
     return (fig,)
 
 
 @app.cell
 def _(fig):
-    with open("benchmark.html", "w") as file:
-        file.write(fig.to_html())
+    with open("benchmark.png", "wb") as file:
+        file.write(fig.to_image(format="png"))
     return (file,)
 
 

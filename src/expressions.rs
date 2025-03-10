@@ -32,7 +32,6 @@
 ///     Ok(())
 /// }
 /// ```
-
 use kernel_density_estimation::prelude::*;
 use polars::prelude::*;
 use polars_core::utils::align_chunks_binary;
@@ -90,13 +89,9 @@ fn kde_dynamic_evals(inputs: &[Series]) -> PolarsResult<Series> {
             let points_inner: &Float32Chunked = lhs.as_ref().f32().unwrap();
             let eval_innter: &Float32Chunked = rhs.as_ref().f32().unwrap();
 
-            let points_vec = points_inner
-                .into_no_null_iter()
-                .collect::<Vec<_>>();
+            let points_vec = points_inner.into_no_null_iter().collect::<Vec<_>>();
 
-            let sample_points = eval_innter
-                .into_no_null_iter()
-                .collect::<Vec<_>>();
+            let sample_points = eval_innter.into_no_null_iter().collect::<Vec<_>>();
 
             let kde = KernelDensityEstimator::new(points_vec, Silverman, Normal);
 

@@ -14,6 +14,10 @@ destroy:
 install-release:
 	uv run maturin develop --release
 
+ruff:
+	ruff format 
+	ruff check
+
 pre-commit:
 	cargo fmt --all 
 	cargo clippy --all-features
@@ -30,3 +34,6 @@ run-release: install-release
 
 edit-bench:
 	uv run marimo edit --sandbox benchmark.py
+
+bench:
+	uv run benchmark.py
