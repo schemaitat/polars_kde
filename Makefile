@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 install-py:
-	uv sync
+	uv sync --all-groups
 
 install: install-py
 	uv run maturin develop
@@ -28,5 +28,5 @@ run: install
 run-release: install-release
 	uv run run.py
 
-bench:
-	uv run benchmark.py
+edit-bench:
+	uv run marimo edit --sandbox benchmark.py

@@ -27,6 +27,7 @@ def _():
     import numpy as np
     import time
 
+
     def benchmark(f, *args, **kwargs):
         ts = time.time()
         _ = f(*args, **kwargs)
@@ -45,6 +46,7 @@ def _():
             }
         )
 
+
     def get_df(
         n_points: int = 1000,
         n_groups: int = 10,
@@ -56,12 +58,14 @@ def _():
             group=pl.cum_count("a").qcut(n_groups),
         )
 
+
     def kde_plugin(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return (
             df.group_by("group")
             .agg(pl.col("a").cast(pl.Float32))
             .with_columns(kde=pkde.kde(pl.col("a"), eval_points=eval_points))
         )
+
 
     def kde_scipy(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         def get_kde(arr: np.array) -> np.array:
@@ -86,11 +90,11 @@ def _():
             )
         )
 
+
     def kde_agg(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return df.group_by("group").agg(
             kde=pkde.kde_agg(pl.col("a"), eval_points=eval_points)
         )
-
     return (
         benchmark,
         gaussian_kde,
@@ -126,16 +130,11 @@ def _(benchmark, get_df, kde_agg, kde_plugin, kde_scipy, np, pl, product):
     results: list[pl.DataFrame] = []
 
     for f, df in product(functions, test_frames):
+        print("Starting benchmark for", f.__name__, "with", df.height, "rows.")
         results.append(benchmark(f, df=df, eval_points=eval_points))
 
     df_bench = pl.concat(results)
     return df, df_bench, eval_points, f, functions, results, test_frames
-
-
-@app.cell
-def _(df_bench):
-    df_bench
-    return
 
 
 @app.cell
