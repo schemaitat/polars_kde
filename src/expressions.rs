@@ -58,6 +58,25 @@ fn same_output_type(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(field.clone())
 }
 
+/// Computes the kernel density estimation (KDE) for given sample points and evaluation points.
+///
+/// # Arguments
+///
+/// * `sample_points` - A vector of sample points.
+/// * `eval_points` - A vector of evaluation points.
+///
+/// # Returns
+///
+/// A vector containing the KDE density estimates.
+fn compute_kde(sample_points: Vec<f32>, eval_points: Vec<f32>) -> Vec<f32> {
+    if sample_points.len() <= 1 {
+        return vec![0.0; eval_points.len()];
+    }
+
+    let kde = KernelDensityEstimator::new(sample_points, Silverman, Normal);
+    kde.pdf(&eval_points)
+}
+
 /// Applies KDE to a series of sample points and evaluation points, returning the resulting density estimates as a series.
 ///
 /// # Arguments
@@ -89,13 +108,11 @@ fn kde_dynamic_evals(inputs: &[Series]) -> PolarsResult<Series> {
             let points_inner: &Float32Chunked = lhs.as_ref().f32().unwrap();
             let eval_innter: &Float32Chunked = rhs.as_ref().f32().unwrap();
 
-            let points_vec = points_inner.into_no_null_iter().collect::<Vec<_>>();
+            let sample_points = points_inner.into_no_null_iter().collect::<Vec<_>>();
 
-            let sample_points = eval_innter.into_no_null_iter().collect::<Vec<_>>();
+            let eval_points = eval_innter.into_no_null_iter().collect::<Vec<_>>();
 
-            let kde = KernelDensityEstimator::new(points_vec, Silverman, Normal);
-
-            let samples = kde.pdf(&sample_points);
+            let samples = compute_kde(sample_points, eval_points);
 
             Series::new(PlSmallStr::EMPTY, samples)
         })
@@ -129,11 +146,9 @@ fn kde_static_evals(inputs: &[Series], kwargs: KdeKwargs) -> PolarsResult<Series
         let s = s.as_ref();
         let points_inner = s.f32().unwrap();
 
-        let points_vec = points_inner.into_no_null_iter().collect::<Vec<_>>();
+        let sample_points = points_inner.into_no_null_iter().collect::<Vec<_>>();
 
-        let kde = KernelDensityEstimator::new(points_vec, Silverman, Normal);
-
-        let samples = kde.pdf(&eval_points);
+        let samples = compute_kde(sample_points, eval_points.clone());
 
         Series::new(PlSmallStr::EMPTY, samples)
     });
@@ -156,13 +171,9 @@ fn kde_agg(inputs: &[Series], kwargs: KdeKwargs) -> PolarsResult<Series> {
     let values = &inputs[0].f32()?;
     let eval_points = kwargs.eval_points;
 
-    let kde = KernelDensityEstimator::new(
-        values.into_no_null_iter().collect::<Vec<_>>(),
-        Silverman,
-        Normal,
-    );
+    let sample_points = values.into_no_null_iter().collect::<Vec<_>>();
 
-    let samples = kde.pdf(&eval_points);
+    let samples = compute_kde(sample_points, eval_points);
 
     Ok(Series::new(PlSmallStr::EMPTY, samples))
 }

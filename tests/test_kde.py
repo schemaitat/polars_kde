@@ -98,3 +98,35 @@ def test_kde_agg(
         check_names=False,
         check_dtypes=False,
     )
+
+
+def test_one_element():
+    df = pl.DataFrame(
+        {
+            "a": [1.0],
+            "id": [0],
+        },
+        schema=pl.Schema(
+            {
+                "a": pl.Float32,
+                "id": pl.Int64,
+            }
+        ),
+    )
+
+    df_kde = df.group_by("id").agg(
+        kde=pkde.kde(
+            pl.col("a"),
+            eval_points=[1.0],
+        )
+    )
+
+    assert df_kde.shape == (1, 2)
+    assert df_kde.select("kde").dtypes[0] == pl.List(pl.Float32)
+
+    assert_series_equal(
+        df_kde["kde"].list.len(),
+        pl.Series([1]),
+        check_names=False,
+        check_dtypes=False,
+    )
