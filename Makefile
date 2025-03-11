@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 install-py:
-	uv sync --all-groups
+	uv sync --all-groups --all-extras
 
 install: install-py
 	uv run maturin develop

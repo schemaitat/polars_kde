@@ -99,7 +99,6 @@ def _():
         return df.group_by("group").agg(
             kde=pkde.kde_agg(pl.col("a"), eval_points=eval_points)
         )
-
     return (
         benchmark,
         gaussian_kde,
@@ -141,22 +140,24 @@ def _(benchmark, get_df, kde_agg, kde_plugin, kde_scipy, np, pl, product):
         results.append(benchmark(f, df=df_c, eval_points=eval_points))
 
     df_bench = pl.concat(results)
-    return df, df_bench, eval_points, f, functions, results, test_frames
+    return df, df_bench, df_c, eval_points, f, functions, results, test_frames
 
 
 @app.cell
 def _(df_bench, px):
-    fig = px.box(
-        df_bench,
+    fig = px.bar(
+        df_bench.sort("n_groups"),
         x="n_rows",
         y="total_time",
         color="name",
-        points="all",
+        facet_row="n_groups",
+        barmode="group",
     )
     fig.update_layout(
         title="KDE Benchmark<br>The points represent different number of groups.",
         xaxis_title="Number of Rows",
         yaxis_title="Total Time (s)",
+        height=1000,
     )
     fig.update_xaxes(type="category")
     fig
@@ -168,6 +169,11 @@ def _(fig):
     with open("benchmark.png", "wb") as file:
         file.write(fig.to_image(format="png"))
     return (file,)
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":

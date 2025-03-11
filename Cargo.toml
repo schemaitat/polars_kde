@@ -1,6 +1,7 @@
 [package]
 name = "polars_kde"
 edition = "2021"
+version = "0.1.0"
 
 [lib]
 name = "polars_kde"
