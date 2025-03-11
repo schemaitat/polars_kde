@@ -23,7 +23,7 @@ def kde_static_evals(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Ex
     )
 
 
-def kde_agg(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
+def kde(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
     return register_plugin_function(
         args=[expr],
         plugin_path=LIB,

@@ -83,7 +83,7 @@ def test_kde_agg(
     eval_points,
 ):
     df_kde = sample_df.group_by("id").agg(
-        kde=pkde.kde_agg(
+        kde=pkde.kde(
             pl.col("a"),
             eval_points=eval_points,
         )

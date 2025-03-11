@@ -97,8 +97,9 @@ def _():
 
     def kde_agg(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return df.group_by("group").agg(
-            kde=pkde.kde_agg(pl.col("a"), eval_points=eval_points)
+            kde=pkde.kde(pl.col("a"), eval_points=eval_points)
         )
+
     return (
         benchmark,
         gaussian_kde,

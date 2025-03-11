@@ -14,11 +14,11 @@ Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by t
 Install the Polars KDE package using pip:
 
 ```bash
-uv add polars_kde
+pip install polars_kde
 ```
 or 
 ```bash
-pip install polars_kde
+uv add polars_kde
 ```
 
 ## Examples
@@ -80,7 +80,7 @@ eval_points = [1.0, 2.0, 3.0, 4.0, 5.0]
 
 # Group by 'id' and apply aggregated KDE
 df_kde = df.group_by("id").agg(
-    kde=pkde.kde_agg(
+    kde=pkde.kde(
         pl.col("a"),
         eval_points=eval_points,
     )
@@ -118,7 +118,7 @@ print(df_kde)
 
 ## Benchmark
 
-After various tests and experiments, it turns out that it is usually a good idea to use `kde_agg` to calculate KDE's. By the  construction of polars, the single groups handled in parallel.
+After various tests and experiments, it turns out that it is usually a good idea to use `kde` to calculate KDE's. By the  construction of polars, the single groups handled in parallel.
 
 The following non representative benchmark compares the performance of different KDE implementations using various DataFrame sizes. We also compare against the `scipy` implementation, wich is not parallelized and applied using `map_elements` in polars.
 
