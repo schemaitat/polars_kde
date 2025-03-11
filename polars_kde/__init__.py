@@ -13,16 +13,6 @@ if TYPE_CHECKING:
     from polars_kde.typing import IntoExprColumn
 
 
-def kde_static_evals(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
-    return register_plugin_function(
-        args=[expr],
-        plugin_path=LIB,
-        function_name="kde_static_evals",
-        is_elementwise=True,
-        kwargs={"eval_points": eval_points},
-    )
-
-
 def kde(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
     return register_plugin_function(
         args=[expr],
@@ -34,12 +24,17 @@ def kde(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
     )
 
 
+def kde_static_evals(expr: IntoExprColumn, *, eval_points: list[float]) -> pl.Expr:
+    return register_plugin_function(
+        args=[expr],
+        plugin_path=LIB,
+        function_name="kde_static_evals",
+        is_elementwise=True,
+        kwargs={"eval_points": eval_points},
+    )
+
+
 def kde_dynamic_evals(expr: IntoExprColumn, eval_points: IntoExprColumn) -> pl.Expr:
-    """
-    Works on two columns each of which is of type
-    List[float] and returns a Series of type List[float].
-    The first column is the data and the second column is the eval_points.
-    """
     return register_plugin_function(
         args=[expr, eval_points],
         plugin_path=LIB,
@@ -48,4 +43,4 @@ def kde_dynamic_evals(expr: IntoExprColumn, eval_points: IntoExprColumn) -> pl.E
     )
 
 
-__all__ = ["__version__", "kde_static_evals", "kde_dynamic_evals"]
+__all__ = ["__version__", "kde", "kde_static_evals", "kde_dynamic_evals"]

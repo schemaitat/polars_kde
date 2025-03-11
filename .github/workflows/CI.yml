@@ -145,7 +145,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: sdist-*
+          pattern: sdist-*
           merge-multiple: true
 
       - name: Publish to PyPI
