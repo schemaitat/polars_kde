@@ -1,33 +1,41 @@
-# Polars KDE
+# polars_kde  
 
-Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by the [Polars](https://www.pola.rs/) DataFrame library. Under the hood it uses the [kernel_density_estimation](https://docs.rs/kernel-density-estimation/latest/kernel_density_estimation/kde/index.html) crate.
+[![PyPI version](https://badge.fury.io/py/polars-kde.svg)](https://badge.fury.io/py/polars-kde)
+
+Provides Kernel Density Estimation (KDE) functionalities as [Polars](https://www.pola.rs/) Plugin.
+Under the hood it uses the [kernel_density_estimation](https://docs.rs/kernel-density-estimation/latest/kernel_density_estimation/kde/index.html) crate.
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Examples](#examples)
 - [Benchmark](#benchmark)
-- [License](#license)
+- [Limitations and further improvements](#limitations-and-further-improvements)
 
 ## Installation
 
-Install the Polars KDE package using pip:
+Install `polars_kde` using `pip` or `uv`:
 
 ```bash
 pip install polars_kde
-```
-or 
-```bash
+# or 
 uv add polars_kde
 ```
 
+See [uv](https://docs.astral.sh/uv/) for more information on how to use `uv` to manage your Python dependencies.
+
+
 ## Examples
 
-Here are some examples of how to use Polars KDE. In general there are three methods to calculate KDE's:
+Here are some examples of how to use `polars_kde`. The library provides three main methods to calculate KDE's:
 
 1. **Static Evaluations**: This method calculates KDE's at a fixed set of evaluation points for each group. Works an already aggregated Data of type `pl.List(pl.Float32)`.
+
 2. **Aggregated KDE**: This method calculates KDE's at a fixed set of evaluation points for each group and aggregates the results. Works on grouped DataFrames, where each group contains the data of type `pl.Float32`.
+
 3. **Dynamic Evaluations**: This method calculates KDE's at a variable set of evaluation points for each group. Works on already aggregated Data of type `pl.List(pl.Float32)`.
+
+In most scenarios, you will probably want to use the `kde` method, which works grouped dataframes and parallelizes the KDE calculations across groups.
 
 ### Example 1: Static Evaluations
 
@@ -48,12 +56,17 @@ df = pl.DataFrame(
 eval_points = [1.0, 2.0, 3.0, 4.0, 5.0]
 
 # Group by 'id' and apply KDE
-df_kde = df.group_by("id").agg(
-    pl.col("a")
-).with_columns(
-    kde=pkde.kde_static_evals(
-        pl.col("a"),
-        eval_points=eval_points,
+df_kde = (
+    df
+    .group_by("id")
+    .agg(
+        "a"
+    )
+    .with_columns(
+        kde=pkde.kde_static_evals(
+            "a",
+            eval_points=eval_points,
+        )
     )
 )
 
@@ -79,10 +92,14 @@ df = pl.DataFrame(
 eval_points = [1.0, 2.0, 3.0, 4.0, 5.0]
 
 # Group by 'id' and apply aggregated KDE
-df_kde = df.group_by("id").agg(
-    kde=pkde.kde(
-        pl.col("a"),
-        eval_points=eval_points,
+df_kde = (
+    df
+    .group_by("id")
+    .agg(
+        kde=pkde.kde(
+            "a",
+            eval_points=eval_points,
+        )
     )
 )
 
@@ -106,10 +123,13 @@ df = pl.DataFrame(
 )
 
 # Apply dynamic KDE evaluations
-df_kde = df.with_columns(
-    kde=pkde.kde_dynamic_evals(
-        pl.col("a"),
-        pl.col("eval_points"),
+df_kde = (
+    df
+    .with_columns(
+        kde=pkde.kde_dynamic_evals(
+            "a",
+            "eval_points",
+        )
     )
 )
 
@@ -132,14 +152,7 @@ If you want to run the benchmark yourself, you can use the following command:
 make bench
 ```
 
-NOTE: The `benchmark.py` file is actually a [marimo](https://marimo.app) notebook. Since it was created in sandbox mode the dependencies are part of the header information and we do not need to include any additional dependencies in the `pyproject.toml` file. Great.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-Polars KDE provides Kernel Density Estimation (KDE) functionalities powered by the [Polars](https://www.pola.rs/) DataFrame library.
-
+**NOTE:** The `benchmark.py` file is actually a [marimo](https://marimo.app) notebook. Since it was created in sandbox mode the dependencies are part of the header information and we do not need to include any additional dependencies in the `pyproject.toml` file. Great.
 
 ## Limitations and further improvements
 

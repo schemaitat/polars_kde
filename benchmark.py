@@ -63,7 +63,7 @@ def _():
             .lazy()
         )
 
-    def kde_plugin(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
+    def kde_static_evals(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return (
             df.group_by("group")
             .agg(pl.col("a").cast(pl.Float32))
@@ -95,7 +95,7 @@ def _():
             )
         )
 
-    def kde_agg(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
+    def kde(df: pl.DataFrame, eval_points: list[float]) -> pl.DataFrame:
         return df.group_by("group").agg(
             kde=pkde.kde(pl.col("a"), eval_points=eval_points)
         )
@@ -105,9 +105,9 @@ def _():
         gaussian_kde,
         get_df,
         kaleido,
-        kde_agg,
-        kde_plugin,
+        kde,
         kde_scipy,
+        kde_static_evals,
         mo,
         np,
         partial,
@@ -121,12 +121,12 @@ def _():
 
 
 @app.cell
-def _(benchmark, get_df, kde_agg, kde_plugin, kde_scipy, np, pl, product):
+def _(benchmark, get_df, kde, kde_scipy, kde_static_evals, np, pl, product):
     eval_points = np.linspace(0, 1, 50).tolist()
 
     # df_kde = kde(get_df(10_000_000), eval_points=eval_points)
 
-    functions = [kde_scipy, kde_agg, kde_plugin]
+    functions = [kde_scipy, kde, kde_static_evals]
     test_frames = [
         get_df(i, j)
         for i in [10_000, 100_000, 500_000, 1_000_000, 5_000_000]
@@ -155,7 +155,7 @@ def _(df_bench, px):
         barmode="group",
     )
     fig.update_layout(
-        title="KDE Benchmark<br>The points represent different number of groups.",
+        title="KDE Benchmark",
         xaxis_title="Number of Rows",
         yaxis_title="Total Time (s)",
         height=1000,
